@@ -29,8 +29,33 @@ const parseAlmanac = function(lines){
     return alm;
 }
 
-const calculateSeedToLocation = function(seed, almanac){
+const getAlmanacNumber = function(value, maps){
+    let mappedNumber = null;
+    for(let i = 0; i < maps.length; i++){
+        //first check for abnormal mapping
+        const lowerBound = maps[i].sourceNum;
+        const upperBound = maps[i].sourceNum + maps[i].range - 1;
+        if(value >= lowerBound && value <= upperBound){
+            const distanceFromLowerBound = value - lowerBound;
+            mappedNumber = maps[i].destNum + distanceFromLowerBound;
+        }
+    }
 
+    if(mappedNumber === null){
+        return value;
+    } else {
+        return mappedNumber;
+    }
+}
+
+const calculateSeedToLocation = function(seed, almanac){
+    let soilNum = getAlmanacNumber(seed, almanac["seed-to-soil"]);
+    let fertNum = getAlmanacNumber(soilNum, almanac["soil-to-fertilizer"]);
+    let waterNum = getAlmanacNumber(fertNum, almanac["fertilizer-to-water"]);
+    let lightNum = getAlmanacNumber(waterNum, almanac["water-to-light"]);
+    let tempNum = getAlmanacNumber(lightNum, almanac["light-to-temperature"]);
+    let humNum = getAlmanacNumber(tempNum, almanac["temperature-to-humidity"]);
+    return getAlmanacNumber(humNum, almanac["humidity-to-location"]);
 }
 
 const doTheChallenge = function(data) {
@@ -45,10 +70,10 @@ const doTheChallenge = function(data) {
         }
     }
 
-    console.log(lowestSoilNum);
+    console.log(lowestLocNum);
 }
 
-fs.readFile('day5-example.txt', 'utf8', (err, data) => {
+fs.readFile('day5.txt', 'utf8', (err, data) => {
 	if(err) {
 		console.error(err);
 		return;
