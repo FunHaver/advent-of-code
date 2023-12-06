@@ -1,7 +1,5 @@
 const fs = require('node:fs');
 
-let almanac = {};
-
 const parseAlmanac = function(lines){
     let currentMap = ''
     let alm = {};
@@ -21,8 +19,8 @@ const parseAlmanac = function(lines){
         } else if(line.match(/[0-9]+ [0-9]+ [0-9]/)){
             let mapValues = line.split(" ");
             let mapLineObj = {
-                sourceNum: parseInt(mapValues[0]),
-                destNum: parseInt(mapValues[1]),
+                destNum: parseInt(mapValues[0]),
+                sourceNum: parseInt(mapValues[1]),
                 range: parseInt(mapValues[2])
             }
             alm[currentMap].push(mapLineObj);
@@ -31,9 +29,23 @@ const parseAlmanac = function(lines){
     return alm;
 }
 
+const calculateSeedToLocation = function(seed, almanac){
+
+}
+
 const doTheChallenge = function(data) {
-    almanac = parseAlmanac(data);
-    console.log(almanac);
+    let almanac = parseAlmanac(data);
+    let lowestLocNum = null;
+    for(let i = 0; i < almanac["seeds"].length; i++){
+        const locNum = calculateSeedToLocation(almanac["seeds"][i], almanac);
+        if(lowestLocNum === null){
+            lowestLocNum = locNum;
+        } else if (lowestLocNum > locNum){
+            lowestLocNum = locNum
+        }
+    }
+
+    console.log(lowestSoilNum);
 }
 
 fs.readFile('day5-example.txt', 'utf8', (err, data) => {
