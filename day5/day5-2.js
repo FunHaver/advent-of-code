@@ -1,5 +1,7 @@
 const fs = require('node:fs');
 
+//Wow this ran for like 20 mins
+
 const parseAlmanac = function(lines){
     let currentMap = ''
     let alm = {};
