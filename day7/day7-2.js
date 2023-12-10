@@ -8,6 +8,7 @@ let categoryMap = {
     "fullHouse": 4,
     "fourKind": 5,
     "fiveKind": 6
+
 }
 let game = [[],[],[],[],[],[],[]];
 
@@ -27,7 +28,7 @@ const parseHand = function(line){
         else if(card === "T")
             cardScores.push(10);
         else
-            cardScores.push(parseInt(card));
+            cardScores.push(parseInt(card))
     }
     return {
         hand: cardScores,
@@ -53,24 +54,16 @@ const rankCategory = function(category){
 const classifyHand = function(play){
     const hand = play.hand;
     let matches = {};
-    let jokerSituation = 0;
+    let jokerCounter = 0;
     let highestCard = 0;
-    console.log(hand)
     for(let i = 0; i < hand.length; i++){
-        
-        if(hand[i] !== 1){
-            let filterArray = hand.filter(item => {
-                if(item === hand[i]){
-                    return true;
-                } else {
-                    return false;
-                }
-            })
+        if(hand[i] > 1){
+            let filterArray = hand.filter(item => item === hand[i]);
             if(filterArray.length > 1){
                 matches[hand[i]] = filterArray.length;
             }
         } else {
-            jokerSituation++;
+            jokerCounter++;
         }
 
         if(hand[i] > highestCard){
@@ -78,29 +71,33 @@ const classifyHand = function(play){
         }
     }
 
-    if(jokerSituation > 0){
-        let matchKeys = Object.keys(matches);
-        if(matchKeys.length >= 1){
-            let keyWithMost = "";
+    if(jokerCounter > 0){
+        const matchKeys = Object.keys(matches);
+        if(matchKeys.length === 1){
+            matches[matchKeys[0]] += jokerCounter;
+        } else if (matchKeys.length === 0 && highestCard > 1){
+            matches[`${highestCard}`] = jokerCounter + 1;
+        } else if(matchKeys.length === 0 && highestCard === 1){
+            matches[`${highestCard}`] = jokerCounter;
+        } else {
+            let mostMatchKeys = "";
             for(let i = 0; i < matchKeys.length; i++){
-                console.log(matches[matchKeys[i]])
-                if(i === 0){
-                    keyWithMost = matchKeys[i]
-                } else if(matches[matchKeys[i]] > matches[keyWithMost]){
-                    keyWithMost = matchKeys[i]
+                if(mostMatchKeys.length === 0){
+                    mostMatchKeys = matchKeys[i];
+                } else if(matches[matchKeys[i]] > matches[mostMatchKeys]) {
+                    mostMatchKeys = matchKeys[i];
                 }
             }
-            matches[keyWithMost] += jokerSituation;
-            console.log(matches);
-        } else {
-            matches[`${highestCard}`] = 1 + jokerSituation;
-            console.log(matches);
+
+            matches[mostMatchKeys] += jokerCounter;
         }
-       
     }
 
-    const singleSuitMatch = function(matchNum){
-        
+    const matchKeys = Object.keys(matches);
+    if(matchKeys.length === 0){
+        game[categoryMap["highCard"]].push(play);
+    } else if(matchKeys.length === 1){
+        let matchNum = matches[matchKeys[0]];
         if(matchNum === 5)
             game[categoryMap["fiveKind"]].push(play);
         else if(matchNum === 4)
@@ -110,53 +107,29 @@ const classifyHand = function(play){
         else if(matchNum === 2)
             game[categoryMap["onePair"]].push(play);
         else {
-            console.error(`ERROR, CANNOT CLASSIFY. matchNum: ${matchNum}`)
+            console.error(`ERROR, CANNOT CLASSIFY:`)
             console.error(play);
+            console.error(matches)
         }
-    }
+    } else if(matchKeys.length === 2){
+        let firstMatchNum = matches[matchKeys[0]];
+        let secondMatchNum = matches[matchKeys[1]];
 
-    const multiSuitMatch = function(firstMatchNum, secondMatchNum){
-        if(firstMatchNum === 2 && secondMatchNum === 2){
+        if(firstMatchNum === 2 && secondMatchNum === 2)
             game[categoryMap["twoPair"]].push(play);
-        } else if(firstMatchNum === 3 || secondMatchNum === 3){
+        else if(firstMatchNum === 3 || secondMatchNum === 3){
             if(firstMatchNum === 2 || secondMatchNum === 2){
                 game[categoryMap["fullHouse"]].push(play);
             } else {
-                if(firstMatchNum > secondMatchNum){
-                    singleSuitMatch(firstMatchNum);
-                } else {
-                    singleSuitMatch(secondMatchNum);
-                }
-            } 
-        } else {
-            if(firstMatchNum > secondMatchNum){
-                singleSuitMatch(firstMatchNum);
-            } else {
-                singleSuitMatch(secondMatchNum);
+                console.error(`ERROR, CANNOT CLASSIFY:`)
+                console.error(play);
+                console.error(matches)
             }
         }
-    }
-
-    const matchKeys = Object.keys(matches);
-    if(matchKeys.length === 0){
-        game[categoryMap["highCard"]].push(play);
-    } else if(matchKeys.length === 1){
-        singleSuitMatch(matches[matchKeys[0]]);
-        
-    } else if(matchKeys.length === 2){
-        multiSuitMatch(matches[matchKeys[0]], matches[matchKeys[1]])
-        
     } else {
-        let highestMatchNum = 0;
-        let secondHighestMatchNum = 0;
-        for(let i = 0; i < matchKeys.length; i++){
-            if(matches[matchKeys[i]] > highestMatchNum){
-                highestMatchNum = matches[matchKeys[i]];
-            } else if(matches[matchKeys[i]] > secondHighestMatchNum){
-                secondHighestMatchNum = matches[matchKeys[i]]
-            }
-        }
-        multiSuitMatch(highestMatchNum, secondHighestMatchNum);
+        console.error(`ERROR, CANNOT CLASSIFY:`)
+        console.error(play);
+        console.error(matches)
     }    
 }
 
@@ -165,7 +138,6 @@ const doTheChallenge = function(data){
         let play = parseHand(line);
         classifyHand(play);
     })
-
     let rank = 1;
 
     for(let i = 0; i < game.length; i++){
